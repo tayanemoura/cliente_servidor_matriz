@@ -3,17 +3,28 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <pthread.h> 
+#include <stdio.h>
+#include <stdlib.h>
 
 // socket(), bind(), listen(), accept(), recv(), send(), close(), close()
+
+void* read_client(void* arg){
+	char buffer[1024];
+	int connection = *(int *) arg;
+
+	strcpy(buffer, "Hello World\n");
+	//int send(int sockfd, const void *msg, int len, int flags); 
+	send(connection, buffer, 13, 0);
+	close(connection);
+}
 
 int main(void) {
 
 
 	int sock;
-	int connection;
 	struct sockaddr_in server_addr;
-	struct sockaddr_in client_addr;
-	char buffer[1024];
+	
 
 
 	//PF_INET = IPv4
@@ -42,15 +53,16 @@ int main(void) {
 
 	printf("%s\n","Esperando conexões...");
 
-	//while (1){
-	socklen_t client_size = sizeof(client_addr);
-	connection = accept(sock, (struct sockaddr *) &client_addr, &client_size);
-	//printf("%s\n","Received request...");
-	strcpy(buffer, "Hello World\n");
-	//int send(int sockfd, const void *msg, int len, int flags); 
-	send(connection, buffer, 13, 0);
-	close(connection);
-	//}
+	while (1){
+		int connection;
+		struct sockaddr_in client_addr;
+		socklen_t client_size = sizeof(client_addr);
+
+		pthread_t thread;
+		connection = accept(sock, (struct sockaddr *) &client_addr, &client_size);
+		pthread_create(&thread, NULL, read_client, &connection );
+
+	}
 
 	close(sock);
 }

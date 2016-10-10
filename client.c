@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <stdio.h>
 
 // socket(),connect(), send(), recv(), close()
 
@@ -33,11 +34,10 @@ int main(void) {
 	else{
 		printf("Conectado\n");
 	}
-
 	recv(sock, recvBuffer, 1024, 0);
-
 	printf("%s", recvBuffer );
 	
 
 	close(sock);
+	
 }
