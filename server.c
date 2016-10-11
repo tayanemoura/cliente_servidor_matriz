@@ -5,17 +5,29 @@
 #include <string.h>
 #include <pthread.h> 
 #include <stdio.h>
+
+#include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <sys/uio.h>
 
 // socket(), bind(), listen(), accept(), recv(), send(), close(), close()
 
 void* read_client(void* arg){
 	char buffer[1024];
 	int connection = *(int *) arg;
-
-	strcpy(buffer, "Hello World\n");
-	//int send(int sockfd, const void *msg, int len, int flags); 
-	send(connection, buffer, 13, 0);
+	while(1){
+		recv(connection, buffer, 1024, 0);
+		//int send(int sockfd, const void *msg, int len, int flags); 
+		printf("%s", buffer );
+		if(strcmp(buffer,"EOF\n") != 0){
+			break;
+		}
+	}
 	close(connection);
 }
 
@@ -60,6 +72,9 @@ int main(void) {
 
 		pthread_t thread;
 		connection = accept(sock, (struct sockaddr *) &client_addr, &client_size);
+		if(connection == -1){
+			perror("Server - erro de conexão ");
+		}
 		pthread_create(&thread, NULL, read_client, &connection );
 
 	}
