@@ -5,24 +5,20 @@ import thread
 import random
 from datetime import *
 
-#matrix_size = 5
-
-#matrix_file_name = "matriz.txt" 
 
 def print_matrix(matrix):
   for i in range(0, matrix_size):
       for j in range(0, matrix_size):
           print(str(matrix[i][j]) + "\t")
 
-#TODO
 #função para multiplicar as matrizes e salvar em um arquivo multiplica.txt
-def multiply_matrices(m1, m2, matrix_size):
+def multiply_matrices(matrix_1, matrix_2):
 	print "Iniciando multiplicação.."
 	a = datetime.now()
 	#print a.strftime('%Hh%Mm%Ss%fus')
 	#implementação
   	multiply_file = open('multiplica.txt', 'w')
-  	matrix_size = len(m1)
+  	matrix_size = len(matrix_1)
 
   	for i in range(matrix_size):
   		for j in range(matrix_size):
@@ -37,47 +33,90 @@ def multiply_matrices(m1, m2, matrix_size):
 
 	thread.exit()
 
-#TODO
-#função para somar as matrizes e salvar em um arquivo soma.txt
-def add_matrices(m1, m2, matrix_size):
+def add_matrices(m1, m2):
 	print "Iniciando soma.."
-	a = datetime.now()
-	print a.strftime('%Hh%Mm%Ss%fus')
-	#implementação
+	start = datetime.now()
+	print start.strftime('%Hh%Mm%Ss%fus')
+
+	sum_file = open('soma.txt', 'w')
+
+	matrix_size = len(m1)
+	total = 0
+	for i in range(matrix_size):
+		for j in range(matrix_size):
+			total = m1[i][j] + m2[i][j]
+			sum_file.write(str(total) + "\t")
+		sum_file.write("\n")
+
+	end = datetime.now()
+	print end.strftime('%Hh%Mm%Ss%fus')
+
+
+	sum_file.close()
 
 	thread.exit()
+
+#função para retornar uma matriz quadrada a partir de uma lista de elementos
+def get_matrix(elements, matrix_size):
+	#inicializa matriz
+	matrix = []
+  	for i in range(matrix_size):
+  		matrix.append([0]*matrix_size)
+  	
+  	k=0
+  	for i in range(len(matrix)):
+  		for j in range(len(matrix)):
+  			matrix[i][j] = int(elements[k])
+  			k+=1
+
+	return matrix
+
+def send_file(file_name, conn):
+	file = open(file_name, 'r')
+	while True:
+		chunk = file.read(1024)
+		conn.send(chunk)
+		#EOF
+		if chunk == '':
+			break
 
 def read_client(conn, client):
 	print "Cliente:", client
 	file = ""
 
-	#recebe do servidor o tamanho da matriz - ainda não sei se será necessária essa info
+	#recebe do servidor o tamanho da matriz
 	m = conn.recv(1024)
-	#print m
+	print m
+	matrix_size = int(m)
 
 	while True:
+		print "read_client"
 		data = conn.recv(1024)
 		file = file + data
 		if not data:
+			conn.send("ACK")
+			print "break do read_client"
 			break
-		print data
-		
-	#TODO
-	#separa as duas matrizes - considerando que cada matriz está em cada linha, mas vai depender de como faremos o arquivo 
-	aux = file.split('\n')
-	#print aux
+	print "depois do while do read_client"
+	
+	#apaga os \n
+	aux = file.replace("\n", "")
+	# guarda na lista elements cada número
+	elements = aux.split("\t")
 
-	#TODO
-	#como ainda não sei como faremos para ler a matriz coloquei assim por enquanto
+	#passa a primeira metade da lista para retornar matriz 1
+	matrix_1 = get_matrix(elements[:matrix_size*matrix_size], matrix_size)
+	#passa a segunda metade da lista para retornar a matriz2
+	matrix_2 = get_matrix(elements[matrix_size*matrix_size:], matrix_size)
+	
+	print matrix_1
+	print matrix_2
 
-	matrix_1 = aux[0]
-	matrix_2 = aux[1]
+	thread.start_new_thread(multiply_matrices, tuple([matrix_1,matrix_2]))
+	thread.start_new_thread(add_matrices, tuple([matrix_1,matrix_2]))
 
-	#thread.start_new_thread(multiply_matrices, tuple([matrix_1,matrix_2]))
-	thread.start_new_thread(add_matrices, tuple([matrix_1,matrix_2, int(m)]))
-
-	#TODO:
-	#ainda precisamos enviar os arquivos multiplica.txt e soma.txt pro usuário
+	#send_file("multiplica.txt", conn)
+	send_file("soma.txt", conn)
 
 	conn.close()
 	thread.exit()
@@ -90,7 +129,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_addr = ('127.0.0.1', 3000)
 
 sock.bind(server_addr)
-sock.listen(1)
+sock.listen(10)
 print "Esperando conexões.."
 
 

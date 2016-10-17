@@ -2,14 +2,12 @@
 import socket
 import random
 import sys
-from datetime import *
+#from datetime import *
+import time
 
-a = datetime.now()
-timestamp = a.strftime('%H%M%S%f')
-matrix_file_name = "matriz" + timestamp + ".txt"
+matrix_file_name = "matriz.txt"
 
-def create_matrix(matrix_size):
-  
+def create_matrix(matrix_size): 
   matrix = []
   for i in range(matrix_size):
   	matrix.append([0]*matrix_size)
@@ -30,19 +28,50 @@ def print_matrix(matrix, matrix_size):
   			print "%3d" % matrix[i][j],
   		print
 
+def delete_content():
+	file = open(matrix_file_name, 'w')
+	file.seek(0)
+	file.truncate()
+
+
+def read_server():
+	buf = ""
+
+	while True:
+		print "read_server"
+		data = sock.recv(1024)
+		buf = buf + data
+		print data
+		if not data:
+			break
+
+	print buf
+
+def send_server():
+	file = open(matrix_file_name, 'r')
+	#file.seek(0,0)
+	while True:
+		print "send_server"
+		chunk = file.read(1024)
+		sock.send(chunk)
+		#EOF
+		if chunk == '':
+			break
+	print "fecha arquivo"
+	file.close()
+
   		
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 #HOST, PORT
 server_addr = ('127.0.0.1', 3000)
-
 sock.connect(server_addr)
-
 
 # tamanho da matriz
 m = sys.argv[1]
-
 matrix_size = int(m)
+
+#apaga conteúdo do arquivo, caso haja
+delete_content()
 
 m1 = create_matrix(matrix_size)
 m2 = create_matrix(matrix_size)
@@ -54,17 +83,10 @@ print_matrix(m2, matrix_size)
 #envia o tamanho da matriz ao servidor
 sock.send(m)
 
-file = open(matrix_file_name, 'r')
+send_server()
 
-file.seek(0,0)
 
-while True:
-	chunk = file.read(1024)
-	sock.send(chunk)
-	#EOF
-	if chunk == '':
-		break
+read_server()
 
-file.close()
 
 sock.close()
