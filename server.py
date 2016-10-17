@@ -2,15 +2,54 @@
 # -*- coding: utf-8 -*-
 import socket
 import thread
+import random
 from datetime import *
+
+matrix_size = 5
+matrix_file_name = "matriz.txt"
+m1, m2
+
+def create_matrix():
+  matrix
+  matrix_file = open(matrix_file_name, 'a+')
+  for i in range(0, matrix_size):
+      for j in range(0, matrix_size):
+          number = random.randint(0, 100)
+          matrix[i][j] = number
+          print(str(number) + "\t")
+          matrix_file.write((str(number) + "\t"))
+      print()
+      matrix_file.write("\n")
+  print()
+  matrix_file.close()
+  return matrix
+
+def print_matrix(matrix):
+  for i in range(0, matrix_size):
+      for j in range(0, matrix_size):
+          print(str(matrix[i][j]) + "\t")
+
 
 #TODO
 #função para multiplicar as matrizes e salvar em um arquivo multiplica.txt
 def multiply_matrices(m1, m2):
 	print "Iniciando multiplicação.."
 	a = datetime.now()
-	print a.strftime('%Hh%Mm%Ss%fus')
+	#print a.strftime('%Hh%Mm%Ss%fus')
 	#implementação
+  multiply_file = open('multiplica.txt', 'w')
+  matrix_size = len(m1)
+
+  for i in range(matrix_size):
+      for j in range(matrix_size):
+          number = 0
+          for k in range(matrix_size):
+              number += matrix_1[i][k] * matrix_2[k][j]
+          multiply_file.write(str(number) + "\t")
+      if i != matrix_size - 1:
+          multiply_file.write("\n")
+
+  multiply_file.close()
 
 	thread.exit()
 
@@ -66,8 +105,12 @@ server_addr = ('127.0.0.1', 3000)
 
 sock.bind(server_addr)
 sock.listen(1)
-
 print "Esperando conexões.."
+
+m1 = create_matrix()
+m2 = create_matrix()
+multiply_matrices(m1,m2)
+print_matrix(m1)
 
 while True:
 	connection, client_addr = sock.accept()
