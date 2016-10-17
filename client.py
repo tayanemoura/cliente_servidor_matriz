@@ -13,7 +13,7 @@ def create_matrix(matrix_size):
   
   matrix = []
   for i in range(matrix_size):
-  	matrix.append([0]*5)
+  	matrix.append([0]*matrix_size)
 
   print matrix
 
@@ -21,13 +21,14 @@ def create_matrix(matrix_size):
   for i in range(0, matrix_size):
       for j in range(0, matrix_size):
           number = random.randint(0, 100)
-          #matrix[i][j] = number
+          matrix[i][j] = number
           print(str(number) + "\t")
           matrix_file.write((str(number) + "\t"))
       print()
       matrix_file.write("\n")
   print()
   matrix_file.close()
+  print matrix
   return matrix
 
 def print_matrix(matrix):
