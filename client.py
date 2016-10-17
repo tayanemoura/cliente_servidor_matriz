@@ -25,10 +25,11 @@ def create_matrix(matrix_size):
   return matrix
 
 def print_matrix(matrix, matrix_size):
-  for i in range(0, matrix_size):
-      for j in range(0, matrix_size):
-          print(str(matrix[i][j]) + "\t")
+  	for i in range(matrix_size):
+  		for j in range(matrix_size):
+  			print "%3d" % matrix[i][j],
 
+  		
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #HOST, PORT
@@ -46,7 +47,7 @@ m1 = create_matrix(matrix_size)
 m2 = create_matrix(matrix_size)
 print "M1:\n"
 print_matrix(m1, matrix_size)
-print "M2:\n"
+print "\nM2:\n"
 print_matrix(m2, matrix_size)
 
 #envia o tamanho da matriz ao servidor
