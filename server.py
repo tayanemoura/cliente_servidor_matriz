@@ -23,13 +23,14 @@ def multiply_matrices(matrix_1, matrix_2):
   	for i in range(matrix_size):
   		for j in range(matrix_size):
   			number = 0
-        	for k in range(matrix_size):
-        		number += matrix_1[i][k] * matrix_2[k][j]
-          	multiply_file.write(str(number) + "\t")
-      	if i != matrix_size - 1:
-          	multiply_file.write("\n")
+  			for k in range(matrix_size):
+  				number += matrix_1[i][k] * matrix_2[k][j]
+  			multiply_file.write(str(number) + "\t")
+  		if i != matrix_size - 1:
+  			multiply_file.write("\n")
 
   	multiply_file.close()
+
 
 	thread.exit()
 
