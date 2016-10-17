@@ -28,6 +28,7 @@ def print_matrix(matrix, matrix_size):
   	for i in range(matrix_size):
   		for j in range(matrix_size):
   			print "%3d" % matrix[i][j],
+  		print
 
   		
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
