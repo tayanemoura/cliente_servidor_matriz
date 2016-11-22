@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import pdb    
 import socket
-import thread
+import threading
 import random
 from datetime import *
 
@@ -16,12 +16,16 @@ def print_matrix(matrix):
 #função para multiplicar as matrizes e salvar em um arquivo multiplica.txt
 def multiply_matrices(matrix_1, matrix_2):
 	print "Iniciando multiplicação.."
-	a = datetime.now()
-	#print a.strftime('%Hh%Mm%Ss%fus')
-	#implementação
-	multiply_file = open('multiplica.txt', 'a')
-	matrix_size = len(matrix_1)
+	multiply_file = open('multiplica.txt', 'w')
+	
+	#inicio da execuçao
+	start = datetime.now()
+	start_time = start.strftime('%Hh%Mm%Ss%fus')
+	print "Inicio multiplicação - "+start_time+"\n"
+	multiply_file.write("Inicio multiplicação -"+start_time+'\n')
 
+	#multiplica
+	matrix_size = len(matrix_1)
 	for i in range(matrix_size):
 		for j in range(matrix_size):
 			number = 0
@@ -32,20 +36,26 @@ def multiply_matrices(matrix_1, matrix_2):
 			multiply_file.write("\n")
 
 	multiply_file.write("\n")
-	multiply_file.write("---------------------------------------------\n")
-
+	
+	#Fim da execuçao
+	end = datetime.now()
+	end_time = end.strftime('%Hh%Mm%Ss%fus')
+	print "Fim multiplicação - "+ end_time+"\n"
+	multiply_file.write('Fim multiplicação - '+ end_time+'\n')
 	multiply_file.close()
 
 
-	thread.exit()
-
 def add_matrices(m1, m2):
 	print "Iniciando soma.."
+	sum_file = open('soma.txt', 'w')
+
+	#Inicio da execuçao
 	start = datetime.now()
-	print start.strftime('%Hh%Mm%Ss%fus')
+	start_time = start.strftime('%Hh%Mm%Ss%fus')
+	print "Inicio soma - "+start_time+"\n"
+	sum_file.write('Inicio soma - '+start_time+'\n')
 
-	sum_file = open('soma.txt', 'a')
-
+	#soma
 	matrix_size = len(m1)
 	total = 0
 	for i in range(matrix_size):
@@ -55,14 +65,15 @@ def add_matrices(m1, m2):
 		sum_file.write("\n")
 
 	sum_file.write("\n")
-	sum_file.write("---------------------------------------------\n")
 
+	#Fim da execuçao
 	end = datetime.now()
-	print end.strftime('%Hh%Mm%Ss%fus')
+	end_time = end.strftime('%Hh%Mm%Ss%fus')
+	print "Fim soma - "+ end_time+"\n"
+	sum_file.write('Fim soma - '+ end_time+'\n')
 
 	sum_file.close()
 
-	thread.exit()
 
 #função para retornar uma matriz quadrada a partir de uma lista de elementos
 def get_matrix(elements, matrix_size):
@@ -83,10 +94,12 @@ def send_file(file_name, conn):
 	file = open(file_name, 'r')
 	while True:
 		chunk = file.read(1024)
-		conn.send(chunk)
+		sent = conn.send(chunk)
+
 		#EOF
 		if chunk == '':
 			break
+		
 
 def read_client(conn, client):
 	print "Cliente:", client
@@ -94,41 +107,48 @@ def read_client(conn, client):
 
 	#recebe do servidor o tamanho da matriz
 	m = conn.recv(1024)
-	print m
+
+	while not m.isdigit():
+		pdb.set_trace()
+		conn.send("NACK")
+		m = conn.recv(1024)
+
+	conn.send("ACK")
+
 	matrix_size = int(m)
 
 	while True:
-		print "read_client"
 		data = conn.recv(1024)
 		file = file + data
-		if not data: 
-
-			conn.send("ACK")
-			print "break do read_client"
+		if "ACK" in data:
 			break
-		print "depois do while do read_client"
 		
-		#apaga os \n
-		aux = file.replace("\n", "")
-		# guarda na lista elements cada número
-		elements = aux.split("\t")
+	#apaga os \n
+	aux = file.replace("\n", "")
+	# guarda na lista elements cada número
+	elements = aux.split("\t")
 
-		#passa a primeira metade da lista para retornar matriz 1
-		matrix_1 = get_matrix(elements[:matrix_size*matrix_size], matrix_size)
-		#passa a segunda metade da lista para retornar a matriz2
-		matrix_2 = get_matrix(elements[matrix_size*matrix_size:], matrix_size)
-		
-		print matrix_1
-		print matrix_2
+	#passa a primeira metade da lista para retornar matriz 1
+	matrix_1 = get_matrix(elements[:matrix_size*matrix_size], matrix_size)
+	#passa a segunda metade da lista para retornar a matriz2
+	matrix_2 = get_matrix(elements[matrix_size*matrix_size:], matrix_size)
+	
+	print matrix_1
+	print matrix_2
 
-		thread.start_new_thread(multiply_matrices, tuple([matrix_1,matrix_2]))
-		thread.start_new_thread(add_matrices, tuple([matrix_1,matrix_2]))
+	mult = threading.Thread(target = multiply_matrices, args = (matrix_1,matrix_2))
+	soma = threading.Thread(target = add_matrices, args = (matrix_1,matrix_2))
 
-		#send_file("multiplica.txt", conn)
-		send_file("soma.txt", conn)
+	mult.start()
+	soma.start()
 
-		conn.close()
-		thread.exit()
+ 	mult.join()
+ 	soma.join()
+
+	send_file("multiplica.txt", conn)
+	send_file("soma.txt", conn)
+
+	conn.close()
 
 
 
@@ -144,6 +164,8 @@ print "Esperando conexões.."
 
 while True:
 	connection, client_addr = sock.accept()
-	thread.start_new_thread(read_client, tuple([connection, client_addr]))
+	client = threading.Thread (target = read_client, args = (connection, client_addr))
+	client.start()
+	# thread.start_new_thread(read_client, tuple([connection, client_addr]))
 
 sock.close()
